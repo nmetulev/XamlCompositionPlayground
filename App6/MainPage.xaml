@@ -1,0 +1,34 @@
+﻿<Page
+    x:Class="App6.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:App6"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Button Click="Button_Click" Content="Click Me"></Button>
+        <Grid Height="100" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Center" >
+            <Border x:Name="Element" Height="100" Width="100" Background="Red" Margin="0, 0,0,-200">
+                <local:ImplicitAnimations.ImplicitShowAnimations>
+                    <local:CompAnimationCollection>
+                        <local:CompScalarKeyFrameAnimation Target="Offset.Y" Duration="0:0:1" To="0.0"></local:CompScalarKeyFrameAnimation>
+                        <local:CompScalarKeyFrameAnimation Target="Opacity" Duration="0:0:1" To="1.0"></local:CompScalarKeyFrameAnimation>
+                    </local:CompAnimationCollection>
+                </local:ImplicitAnimations.ImplicitShowAnimations>
+                <local:ImplicitAnimations.ImplicitHideAnimations>
+                    <local:CompAnimationCollection>
+                        <local:CompScalarKeyFrameAnimation Target="Offset.Y" Duration="0:0:1" To="100.0">
+                            <local:CompScalarKeyFrameAnimation.ScalarKeyFrames>
+                                <local:ScalarKeyFrame NormalizedProgressKey="0.1" Value="-50.0"></local:ScalarKeyFrame>
+                                <local:ScalarKeyFrame NormalizedProgressKey="0.5" Value="0.0"></local:ScalarKeyFrame>
+                            </local:CompScalarKeyFrameAnimation.ScalarKeyFrames>
+                        </local:CompScalarKeyFrameAnimation>
+                        <local:CompScalarKeyFrameAnimation Target="Opacity" Duration="0:0:1" To="0.0"></local:CompScalarKeyFrameAnimation>
+                    </local:CompAnimationCollection>
+                </local:ImplicitAnimations.ImplicitHideAnimations>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>
