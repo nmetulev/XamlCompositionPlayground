@@ -10,6 +10,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
+using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
@@ -30,6 +31,14 @@ namespace App6
             
         }
 
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            var visual = ElementCompositionPreview.GetElementVisual(Element2);
+            visual.CenterPoint = new Vector3(50f, 50f, 1);
+
+        }
+
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             Element.Visibility = Element.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
@@ -39,6 +48,15 @@ namespace App6
         {
             Canvas.SetTop(Element2, random.NextDouble() * Window.Current.Bounds.Height);
             Canvas.SetLeft(Element2, random.NextDouble() * Window.Current.Bounds.Width);
+        }
+
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            var visual = ElementCompositionPreview.GetElementVisual(Element2);
+            visual.Scale = new Vector3((float)random.NextDouble() * 2,
+                                       (float)random.NextDouble() * 2,
+                                       1);
+
         }
     }
 }

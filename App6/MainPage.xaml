@@ -9,25 +9,28 @@
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <StackPanel VerticalAlignment="Center">
-            <Button Click="Button_Click" Content="Visibility"></Button>
-            <Button Click="Button_Click_1" Content="Move Me"></Button>
+            <Button Click="Button_Click" Content="Visibility (1)"></Button>
+            <Button Click="Button_Click_1" Content="Move Me (2)"></Button>
+            <Button Click="Button_Click_2" Content="Scale Me (2)"></Button>
         </StackPanel>
         
         <Grid Height="100" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Center" >
             <Border x:Name="Element" Height="100" Width="100" Background="Red" Margin="0, 0,0,-200">
+                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="40" Foreground="White">1</TextBlock>
                 
                 <local:Implicit.ShowAnimations>
                     <!--<local:CScalarAnimation Target="Offset.Y" Duration="0:0:1" To="0.0"></local:CScalarAnimation>-->
-                    <local:CVector3Animation Target="Offset" Duration="0:0:1" To="-50, -50, 0" ></local:CVector3Animation>
-                    <local:CScalarAnimation Target="Opacity" Duration="0:0:1" To="1.0"></local:CScalarAnimation>
+                    <!--<local:CVector3Animation Target="Offset" Duration="0:0:1" To="-50, -50, 0" ></local:CVector3Animation>-->
+                    <local:OffsetAnimation Duration="0:0:1" To="-50, -50, 0" ></local:OffsetAnimation>
+                    <local:OpacityAnimation Duration="0:0:1" To="1.0"></local:OpacityAnimation>
                 </local:Implicit.ShowAnimations>
                 
                 <local:Implicit.HideAnimations>
-                    <local:CScalarAnimation Target="Offset.Y" Duration="0:0:1" To="100.0">
-                        <local:ScalarKeyFrame NormalizedProgressKey="0.1" Value="-50.0"></local:ScalarKeyFrame>
-                        <local:ScalarKeyFrame NormalizedProgressKey="0.5" Value="0.0"></local:ScalarKeyFrame>
-                    </local:CScalarAnimation>
                     <local:CScalarAnimation Target="Opacity" Duration="0:0:1" To="0.0"></local:CScalarAnimation>
+                    <local:CScalarAnimation Target="Offset.Y" Duration="0:0:1" To="100.0">
+                        <local:ScalarKeyFrame Key="0.1" Value="-50.0"></local:ScalarKeyFrame>
+                        <local:ScalarKeyFrame Key="0.5" Value="0.0"></local:ScalarKeyFrame>
+                    </local:CScalarAnimation>
                 </local:Implicit.HideAnimations>
                 
             </Border>
@@ -35,8 +38,14 @@
 
         <Canvas>
             <Border x:Name="Element2" Height="100" Width="100" Background="Purple">
+                <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="40" Foreground="White">2</TextBlock>
+
                 <local:Implicit.Animations>
-                    <local:CVector3Animation Target="Offset" Duration="0:0:1"></local:CVector3Animation>
+                    <local:CVector3Animation Target="Offset"  Duration="0:0:1"></local:CVector3Animation>
+                    <local:CScalarAnimation Target="RotationAngleInDegrees" ImplicitTarget="Offset"  Duration="0:0:1.2" From="0" To="0">
+                        <local:ScalarKeyFrame Key="0.9" Value="80"></local:ScalarKeyFrame>
+                    </local:CScalarAnimation>
+                    <local:CVector3Animation Target="Scale" Duration="0:0:1"></local:CVector3Animation>
                 </local:Implicit.Animations>
             </Border>
         </Canvas>
