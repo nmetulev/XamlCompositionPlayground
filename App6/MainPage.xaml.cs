@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -22,14 +23,24 @@ namespace App6
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        Random random = new Random();
         public MainPage()
         {
             this.InitializeComponent();
+            
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             Element.Visibility = Element.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            Element2.Margin = new Thickness(random.NextDouble() * Window.Current.Bounds.Width, 
+                                            random.NextDouble() * Window.Current.Bounds.Height,
+                                            0,
+                                            0);
         }
     }
 }

@@ -8,27 +8,36 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Button Click="Button_Click" Content="Click Me"></Button>
+        <StackPanel VerticalAlignment="Center">
+            <Button Click="Button_Click" Content="Visibility"></Button>
+            <Button Click="Button_Click_1" Content="Move Me"></Button>
+        </StackPanel>
+        
         <Grid Height="100" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Center" >
             <Border x:Name="Element" Height="100" Width="100" Background="Red" Margin="0, 0,0,-200">
-                <local:ImplicitAnimations.ImplicitShowAnimations>
-                    <local:CompAnimationCollection>
-                        <local:CompScalarKeyFrameAnimation Target="Offset.Y" Duration="0:0:1" To="0.0"></local:CompScalarKeyFrameAnimation>
-                        <local:CompScalarKeyFrameAnimation Target="Opacity" Duration="0:0:1" To="1.0"></local:CompScalarKeyFrameAnimation>
-                    </local:CompAnimationCollection>
-                </local:ImplicitAnimations.ImplicitShowAnimations>
-                <local:ImplicitAnimations.ImplicitHideAnimations>
-                    <local:CompAnimationCollection>
-                        <local:CompScalarKeyFrameAnimation Target="Offset.Y" Duration="0:0:1" To="100.0">
-                            <local:CompScalarKeyFrameAnimation.ScalarKeyFrames>
-                                <local:ScalarKeyFrame NormalizedProgressKey="0.1" Value="-50.0"></local:ScalarKeyFrame>
-                                <local:ScalarKeyFrame NormalizedProgressKey="0.5" Value="0.0"></local:ScalarKeyFrame>
-                            </local:CompScalarKeyFrameAnimation.ScalarKeyFrames>
-                        </local:CompScalarKeyFrameAnimation>
-                        <local:CompScalarKeyFrameAnimation Target="Opacity" Duration="0:0:1" To="0.0"></local:CompScalarKeyFrameAnimation>
-                    </local:CompAnimationCollection>
-                </local:ImplicitAnimations.ImplicitHideAnimations>
+                
+                <local:Implicit.ShowAnimations>
+                    <!--<local:CScalarAnimation Target="Offset.Y" Duration="0:0:1" To="0.0"></local:CScalarAnimation>-->
+                    <local:CVector3Animation Target="Offset" Duration="0:0:1" To="-50, -50, 0" ></local:CVector3Animation>
+                    <local:CScalarAnimation Target="Opacity" Duration="0:0:1" To="1.0"></local:CScalarAnimation>
+                </local:Implicit.ShowAnimations>
+                
+                <local:Implicit.HideAnimations>
+                    <local:CScalarAnimation Target="Offset.Y" Duration="0:0:1" To="100.0">
+                        <local:ScalarKeyFrame NormalizedProgressKey="0.1" Value="-50.0"></local:ScalarKeyFrame>
+                        <local:ScalarKeyFrame NormalizedProgressKey="0.5" Value="0.0"></local:ScalarKeyFrame>
+                    </local:CScalarAnimation>
+                    <local:CScalarAnimation Target="Opacity" Duration="0:0:1" To="0.0"></local:CScalarAnimation>
+                </local:Implicit.HideAnimations>
+                
             </Border>
         </Grid>
+
+        <Canvas>
+            <Border x:Name="Element2" Height="100" Width="100" Background="Purple">
+                
+            </Border>
+        </Canvas>
+        
     </Grid>
 </Page>

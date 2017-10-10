@@ -1,34 +1,102 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.Composition;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Hosting;
+using Windows.UI.Xaml.Markup;
 
 namespace App6
 {
-    public class ImplicitAnimations
+    public class Implicit
     {
-        public static CompAnimationCollection GetImplicitShowAnimations(DependencyObject obj)
+        public static CAnimationCollection GetShowAnimations(DependencyObject obj)
         {
-            return (CompAnimationCollection)obj.GetValue(ImplicitShowAnimationsProperty);
+            var collection = (CAnimationCollection)obj.GetValue(ShowAnimationsProperty);
+
+            if (collection == null)
+            {
+                collection = new CAnimationCollection();
+                obj.SetValue(ShowAnimationsProperty, collection);
+            }
+
+            return collection;
         }
 
-        public static void SetImplicitShowAnimations(DependencyObject obj, CompAnimationCollection value)
+        public static void SetShowAnimations(DependencyObject obj, CAnimationCollection value)
         {
-            obj.SetValue(ImplicitShowAnimationsProperty, value);
+            obj.SetValue(ShowAnimationsProperty, value);
         }
 
-        // Using a DependencyProperty as the backing store for ImplicitShowAnimations.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty ImplicitShowAnimationsProperty =
-            DependencyProperty.RegisterAttached("ImplicitShowAnimations", typeof(CompAnimationCollection), typeof(ImplicitAnimations), new PropertyMetadata(null, ImplicitShowAnimationsChanged));
-
-        private static void ImplicitShowAnimationsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        public static CAnimationCollection GetHideAnimations(DependencyObject obj)
         {
-            if (!(e.NewValue is CompAnimationCollection animationCollection))
+            var collection = (CAnimationCollection)obj.GetValue(HideAnimationsProperty);
+
+            if (collection == null)
+            {
+                collection = new CAnimationCollection();
+                obj.SetValue(HideAnimationsProperty, collection);
+            }
+            return collection;
+        }
+
+        public static void SetHideAnimations(DependencyObject obj, CAnimationCollection value)
+        {
+            obj.SetValue(HideAnimationsProperty, value);
+        }
+
+        public static CAnimationCollection GetAnimations(DependencyObject obj)
+        {
+            var collection = (CAnimationCollection)obj.GetValue(AnimationsProperty);
+
+            if (collection == null)
+            {
+                collection = new CAnimationCollection();
+                obj.SetValue(AnimationsProperty, collection);
+            }
+            return collection;
+        }
+
+        public static void SetAnimations(DependencyObject obj, CAnimationCollection value)
+        {
+            obj.SetValue(AnimationsProperty, value);
+        }
+
+        // Using a DependencyProperty as the backing store for ShowAnimations.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty ShowAnimationsProperty =
+            DependencyProperty.RegisterAttached("ShowAnimations", 
+                                                typeof(CAnimationCollection), 
+                                                typeof(Implicit), 
+                                                new PropertyMetadata(null, ShowAnimationsChanged));
+
+        // Using a DependencyProperty as the backing store for HideAnimations.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty HideAnimationsProperty =
+            DependencyProperty.RegisterAttached("HideAnimations", 
+                                                typeof(CAnimationCollection), 
+                                                typeof(Implicit), 
+                                                new PropertyMetadata(null, HideAnimationsChanged));
+
+        // Using a DependencyProperty as the backing store for Animations.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty AnimationsProperty =
+            DependencyProperty.RegisterAttached("Animations", 
+                                                typeof(CAnimationCollection), 
+                                                typeof(Implicit), 
+                                                new PropertyMetadata(null, AnimationsChanged));
+
+        private static void ShowAnimationsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (e.OldValue is CAnimationCollection oldCollection)
+            {
+                oldCollection.CollectionChanged -= ShowCollectionChanged;
+            }
+
+            if (!(e.NewValue is CAnimationCollection animationCollection))
             {
                 return;
             }
@@ -38,27 +106,21 @@ namespace App6
                 return;
             }
 
-            var showAnimationGroup = GetGroupFromCompAnimationCollection(element, animationCollection);
+            animationCollection.CollectionChanged += ShowCollectionChanged;
+            animationCollection.Element = element;
+
+            var showAnimationGroup = GetGroupFromCAnimationCollection(element, animationCollection);
             ElementCompositionPreview.SetImplicitShowAnimation(element, showAnimationGroup);
         }
 
-        public static CompAnimationCollection GetImplicitHideAnimations(DependencyObject obj)
+        private static void HideAnimationsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            return (CompAnimationCollection)obj.GetValue(ImplicitHideAnimationsProperty);
-        }
+            if (e.OldValue is CAnimationCollection oldCollection)
+            {
+                oldCollection.CollectionChanged -= HideCollectionChanged;
+            }
 
-        public static void SetImplicitHideAnimations(DependencyObject obj, CompAnimationCollection value)
-        {
-            obj.SetValue(ImplicitHideAnimationsProperty, value);
-        }
-
-        // Using a DependencyProperty as the backing store for ImplicitHideAnimations.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty ImplicitHideAnimationsProperty =
-            DependencyProperty.RegisterAttached("ImplicitHideAnimations", typeof(CompAnimationCollection), typeof(ImplicitAnimations), new PropertyMetadata(null, ImplicitHideAnimationsChanged));
-
-        private static void ImplicitHideAnimationsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if (!(e.NewValue is CompAnimationCollection animationCollection))
+            if (!(e.NewValue is CAnimationCollection animationCollection))
             {
                 return;
             }
@@ -68,11 +130,38 @@ namespace App6
                     return;
             }
 
-            var hideAnimationGroup = GetGroupFromCompAnimationCollection(element, animationCollection);
+            animationCollection.CollectionChanged += HideCollectionChanged;
+            animationCollection.Element = element;
+
+            var hideAnimationGroup = GetGroupFromCAnimationCollection(element, animationCollection);
             ElementCompositionPreview.SetImplicitHideAnimation(element, hideAnimationGroup);
         }
 
-        private static CompositionAnimationGroup GetGroupFromCompAnimationCollection(UIElement element, CompAnimationCollection animationCollection)
+        private static void AnimationsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (e.OldValue is CAnimationCollection oldCollection)
+            {
+                oldCollection.CollectionChanged -= AnimationsCollectionChanged;
+            }
+
+            if (!(e.NewValue is CAnimationCollection animationCollection))
+            {
+                return;
+            }
+
+            if (!(d is UIElement element))
+            {
+                return;
+            }
+
+            animationCollection.CollectionChanged += AnimationsCollectionChanged;
+            animationCollection.Element = element;
+
+            //var hideAnimationGroup = GetGroupFromCAnimationCollection(element, animationCollection);
+            //ElementCompositionPreview.SetImplicitHideAnimation(element, hideAnimationGroup);
+        }
+
+        private static CompositionAnimationGroup GetGroupFromCAnimationCollection(UIElement element, CAnimationCollection animationCollection)
         {
             var visual = ElementCompositionPreview.GetElementVisual(element);
 
@@ -90,9 +179,66 @@ namespace App6
 
             return animationGroup;
         }
+
+        private static ImplicitAnimationCollection GetImplicitAnimationCollectionFromCAnimationCollection(UIElement element, CAnimationCollection animationCollection)
+        {
+            return null; //TODO
+        }
+
+        private static void ShowCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Move)
+            {
+                return;
+            }
+
+            var collection = sender as CAnimationCollection;
+            if (collection.Element == null)
+            {
+                return;
+            }
+
+            var showAnimationGroup = GetGroupFromCAnimationCollection(collection.Element, collection);
+            ElementCompositionPreview.SetImplicitShowAnimation(collection.Element, showAnimationGroup);
+
+        }
+
+        private static void HideCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Move)
+            {
+                return;
+            }
+
+            var collection = sender as CAnimationCollection;
+            if (collection.Element == null)
+            {
+                return;
+            }
+
+            var hideAnimationGroup = GetGroupFromCAnimationCollection(collection.Element, collection);
+            ElementCompositionPreview.SetImplicitHideAnimation(collection.Element, hideAnimationGroup);
+        }
+
+        private static void AnimationsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Move)
+            {
+                return;
+            }
+
+            var collection = sender as CAnimationCollection;
+            if (collection.Element == null)
+            {
+                return;
+            }
+
+            // TODO
+        }
     }
 
-    public class CompAnimation : DependencyObject
+    [ContentProperty(Name = nameof(KeyFrames))]
+    public abstract class CAnimation : DependencyObject
     {
         public string Target
         {
@@ -100,43 +246,54 @@ namespace App6
             set { SetValue(TargetProperty, value); }
         }
 
-        // Using a DependencyProperty as the backing store for Target.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty TargetProperty =
-            DependencyProperty.Register("Target", typeof(string), typeof(CompAnimation), new PropertyMetadata(string.Empty));
-
         public TimeSpan Duration
         {
             get { return (TimeSpan)GetValue(DurationProperty); }
             set { SetValue(DurationProperty, value); }
         }
 
-        // Using a DependencyProperty as the backing store for Duration.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty DurationProperty =
-            DependencyProperty.Register("Duration", typeof(TimeSpan), typeof(CompAnimation), new PropertyMetadata(TimeSpan.Zero));
-
-        public virtual CompositionAnimation GetCompositionAnimation(Visual visual)
+        public KeyFrameCollection KeyFrames
         {
-            return null;
-        }
-    }
+            get
+            {
+                var collection = (KeyFrameCollection)GetValue(ScalarKeyFramesProperty);
+                if (collection == null)
+                {
+                    collection = new KeyFrameCollection();
+                    SetValue(ScalarKeyFramesProperty, collection);
+                }
 
-    public class CompScalarKeyFrameAnimation : CompAnimation
-    {
-        public CompScalarKeyFrameAnimation()
-        {
-            ScalarKeyFrames = new ScalarKeyFrameCollection();
-        }
-
-        public ScalarKeyFrameCollection ScalarKeyFrames
-        {
-            get { return (ScalarKeyFrameCollection)GetValue(ScalarKeyFramesProperty); }
+                return collection;
+            }
             set { SetValue(ScalarKeyFramesProperty, value); }
         }
 
+        // Using a DependencyProperty as the backing store for Target.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty TargetProperty =
+            DependencyProperty.Register("Target", 
+                                        typeof(string), 
+                                        typeof(CAnimation), 
+                                        new PropertyMetadata(string.Empty));
+
+        // Using a DependencyProperty as the backing store for Duration.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty DurationProperty =
+            DependencyProperty.Register("Duration", 
+                                        typeof(TimeSpan), 
+                                        typeof(CAnimation), 
+                                        new PropertyMetadata(TimeSpan.Zero));
+
         // Using a DependencyProperty as the backing store for ScalarKeyFrames.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ScalarKeyFramesProperty =
-            DependencyProperty.Register("ScalarKeyFrames", typeof(ScalarKeyFrameCollection), typeof(CompScalarKeyFrameAnimation), new PropertyMetadata(null));
+            DependencyProperty.Register("ScalarKeyFrames",
+                                        typeof(KeyFrameCollection),
+                                        typeof(CScalarAnimation),
+                                        new PropertyMetadata(null));
 
+        public abstract CompositionAnimation GetCompositionAnimation(Visual visual);
+    }
+
+    public class CScalarAnimation : CAnimation
+    {
         public double From
         {
             get { return (double)GetValue(FromProperty); }
@@ -145,7 +302,7 @@ namespace App6
 
         // Using a DependencyProperty as the backing store for From.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty FromProperty =
-            DependencyProperty.Register("From", typeof(double), typeof(CompScalarKeyFrameAnimation), new PropertyMetadata(double.NaN));
+            DependencyProperty.Register("From", typeof(double), typeof(CScalarAnimation), new PropertyMetadata(double.NaN));
 
         public double To
         {
@@ -155,7 +312,7 @@ namespace App6
 
         // Using a DependencyProperty as the backing store for To.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ToProperty =
-            DependencyProperty.Register("To", typeof(double), typeof(CompScalarKeyFrameAnimation), new PropertyMetadata(double.NaN));
+            DependencyProperty.Register("To", typeof(double), typeof(CScalarAnimation), new PropertyMetadata(double.NaN));
 
         private ScalarKeyFrame FromKeyFrame;
         private ScalarKeyFrame ToKeyFrame;
@@ -170,17 +327,17 @@ namespace App6
             }
 
             if (FromKeyFrame != null)
-                ScalarKeyFrames.Remove(FromKeyFrame);
+                KeyFrames.Remove(FromKeyFrame);
 
             if (ToKeyFrame != null)
-                ScalarKeyFrames.Remove(ToKeyFrame);
+                KeyFrames.Remove(ToKeyFrame);
 
             if (!double.IsNaN(From))
             {
                 FromKeyFrame = new ScalarKeyFrame();
                 FromKeyFrame.NormalizedProgressKey = 0f;
                 FromKeyFrame.Value = From;
-                ScalarKeyFrames.Add(FromKeyFrame);
+                KeyFrames.Add(FromKeyFrame);
             }
 
             if (!double.IsNaN(To))
@@ -188,10 +345,10 @@ namespace App6
                 ToKeyFrame = new ScalarKeyFrame();
                 ToKeyFrame.NormalizedProgressKey = 1f;
                 ToKeyFrame.Value = To;
-                ScalarKeyFrames.Add(ToKeyFrame);
+                KeyFrames.Add(ToKeyFrame);
             }
 
-            if (ScalarKeyFrames.Count < 0)
+            if (KeyFrames.Count < 0)
             {
                 return null;
             }
@@ -200,16 +357,135 @@ namespace App6
             animation.Target = Target;
             animation.Duration = Duration;
 
-            foreach(var keyFrame in ScalarKeyFrames)
+            foreach(var keyFrame in KeyFrames)
             {
-                animation.InsertKeyFrame((float)keyFrame.NormalizedProgressKey, (float)keyFrame.Value);
+                if (keyFrame is ScalarKeyFrame scalarKeyFrame)
+                {
+                    animation.InsertKeyFrame((float)keyFrame.NormalizedProgressKey, (float)scalarKeyFrame.Value);
+                }
+                else if (keyFrame is ExpressionKeyFrame expressionKeyFrame)
+                {
+                    animation.InsertExpressionKeyFrame((float)keyFrame.NormalizedProgressKey, expressionKeyFrame.Value);
+                }
             }
 
             return animation;
         }
     }
 
-    public class ScalarKeyFrame: DependencyObject
+    public class CVector3Animation : CAnimation
+    {
+        public string From
+        {
+            get { return (string)GetValue(FromProperty); }
+            set { SetValue(FromProperty, value); }
+        }
+
+        public string To
+        {
+            get { return (string)GetValue(ToProperty); }
+            set { SetValue(ToProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for From.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty FromProperty =
+            DependencyProperty.Register("From", typeof(string), typeof(CVector3Animation), new PropertyMetadata(null));
+
+        // Using a DependencyProperty as the backing store for To.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty ToProperty =
+            DependencyProperty.Register("To", typeof(string), typeof(CVector3Animation), new PropertyMetadata(null));
+
+        private Vector3KeyFrame FromKeyFrame;
+        private Vector3KeyFrame ToKeyFrame;
+
+        public override CompositionAnimation GetCompositionAnimation(Visual visual)
+        {
+            var compositor = visual.Compositor;
+
+            if (string.IsNullOrWhiteSpace(Target))
+            {
+                return null;
+            }
+
+            if (FromKeyFrame != null)
+                KeyFrames.Remove(FromKeyFrame);
+
+            if (ToKeyFrame != null)
+                KeyFrames.Remove(ToKeyFrame);
+
+            if (From != null)
+            {
+                FromKeyFrame = new Vector3KeyFrame();
+                FromKeyFrame.NormalizedProgressKey = 0f;
+                FromKeyFrame.Value = ConvertToVector3(From);
+                KeyFrames.Add(FromKeyFrame);
+            }
+
+            if (To != null)
+            {
+                ToKeyFrame = new Vector3KeyFrame();
+                ToKeyFrame.NormalizedProgressKey = 1f;
+                ToKeyFrame.Value = ConvertToVector3(To);
+                KeyFrames.Add(ToKeyFrame);
+            }
+
+            if (KeyFrames.Count < 0)
+            {
+                return null;
+            }
+
+            var animation = compositor.CreateVector3KeyFrameAnimation();
+            animation.Target = Target;
+            animation.Duration = Duration;
+
+            foreach (var keyFrame in KeyFrames)
+            {
+                if (keyFrame is Vector3KeyFrame vectorKeyFrame)
+                {
+                    animation.InsertKeyFrame((float)keyFrame.NormalizedProgressKey, vectorKeyFrame.Value);
+                }
+                else if (keyFrame is ExpressionKeyFrame expressionKeyFrame)
+                {
+                    animation.InsertExpressionKeyFrame((float)keyFrame.NormalizedProgressKey, expressionKeyFrame.Value);
+                }
+            }
+
+            return animation;
+        }
+
+        public static Vector3 ConvertToVector3(string str)
+        {
+            string[] values = str.Split(',');
+
+            var count = values.Count();
+            Vector3 vector = Vector3.Zero;
+
+            try
+            {
+                if (count == 1)
+                {
+                    vector = new Vector3(float.Parse(values[0]));
+                }
+                else if (count == 3)
+                {
+                    vector = new Vector3(float.Parse(values[0]),
+                                         float.Parse(values[1]),
+                                         float.Parse(values[2]));
+                }
+                else
+                {
+                    throw new Exception();
+                }
+            } catch (Exception)
+            {
+                throw new FormatException($"Cannot convert {str} to Vector3. Use format \"float, float, float\"");
+            }
+
+            return vector;
+        }
+    }
+
+    public abstract class KeyFrame : DependencyObject
     {
         public double NormalizedProgressKey
         {
@@ -219,8 +495,11 @@ namespace App6
 
         // Using a DependencyProperty as the backing store for NormalizedProgressKey.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty NormalizedProgressKeyProperty =
-            DependencyProperty.Register("NormalizedProgressKey", typeof(double), typeof(ScalarKeyFrame), new PropertyMetadata(0.0));
+            DependencyProperty.Register("NormalizedProgressKey", typeof(double), typeof(KeyFrame), new PropertyMetadata(0.0));
+    }
 
+    public class ScalarKeyFrame: KeyFrame
+    {
         public double Value
         {
             get { return (double)GetValue(ValueProperty); }
@@ -232,13 +511,77 @@ namespace App6
             DependencyProperty.Register("Value", typeof(double), typeof(ScalarKeyFrame), new PropertyMetadata(0.0));
     }
 
-    public class ScalarKeyFrameCollection : List<ScalarKeyFrame>
+    public class ExpressionKeyFrame : KeyFrame
+    {
+        public string Value
+        {
+            get { return (string)GetValue(ValueProperty); }
+            set { SetValue(ValueProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for Value.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty ValueProperty =
+            DependencyProperty.Register("Value", typeof(string), typeof(ExpressionKeyFrame), new PropertyMetadata(string.Empty));
+    }
+
+    public class Vector3KeyFrame : KeyFrame
+    {
+        public Vector3 Value
+        {
+            get { return (Vector3)GetValue(ValueProperty); }
+            set { SetValue(ValueProperty, value); }
+        }
+
+        // Using a DependencyProperty as the backing store for Value.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty ValueProperty =
+            DependencyProperty.Register("Value", typeof(Vector3), typeof(Vector3KeyFrame), new PropertyMetadata(Vector3.Zero));
+
+
+    }
+
+    public class KeyFrameCollection : List<KeyFrame>
     {
 
     }
 
-    public class CompAnimationCollection : List<CompAnimation>
+    public class CAnimationCollection : ObservableCollection<CAnimation>
     {
-
+        public UIElement Element { get; set; }
     }
+
+    //[Windows.Foundation.Metadata.CreateFromString(MethodName="App6.CVector3.ConvertToCVector3")]
+    //public class CVector3
+    //{
+    //    public Vector3 Value { get; set; }
+
+    //    public static CVector3 ConvertToCVector3(string str)
+    //    {
+    //        string[] values = str.Split(',');
+
+    //        var count = values.Count();
+    //        Vector3 vector = Vector3.Zero;
+
+    //        if (count == 1)
+    //        {
+    //            vector = new Vector3(float.Parse(values[0]));
+    //        }
+    //        else if (count == 3)
+    //        {
+    //            vector = new Vector3(float.Parse(values[0]),
+    //                                 float.Parse(values[1]),
+    //                                 float.Parse(values[2]));
+    //        }
+    //        else
+    //        {
+    //            throw new FormatException($"Cannot convert {str} to Vector3. Use format \"float, float, float\"");
+    //        }
+
+    //        return new CVector3() { Value = vector };
+    //    }
+
+    //    public static implicit operator Vector3(CVector3 obj)
+    //    {
+    //        return obj.Value;
+    //    }
+    //}
 }
