@@ -37,10 +37,8 @@ namespace App6
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            Element2.Margin = new Thickness(random.NextDouble() * Window.Current.Bounds.Width, 
-                                            random.NextDouble() * Window.Current.Bounds.Height,
-                                            0,
-                                            0);
+            Canvas.SetTop(Element2, random.NextDouble() * Window.Current.Bounds.Height);
+            Canvas.SetLeft(Element2, random.NextDouble() * Window.Current.Bounds.Width);
         }
     }
 }

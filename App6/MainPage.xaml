@@ -35,7 +35,9 @@
 
         <Canvas>
             <Border x:Name="Element2" Height="100" Width="100" Background="Purple">
-                
+                <local:Implicit.Animations>
+                    <local:CVector3Animation Target="Offset" Duration="0:0:1"></local:CVector3Animation>
+                </local:Implicit.Animations>
             </Border>
         </Canvas>
         

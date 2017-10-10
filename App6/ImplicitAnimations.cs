@@ -157,8 +157,9 @@ namespace App6
             animationCollection.CollectionChanged += AnimationsCollectionChanged;
             animationCollection.Element = element;
 
-            //var hideAnimationGroup = GetGroupFromCAnimationCollection(element, animationCollection);
-            //ElementCompositionPreview.SetImplicitHideAnimation(element, hideAnimationGroup);
+            
+            var implicitAnimationCollection = GetImplicitAnimationCollectionFromCAnimationCollection(element, animationCollection);
+            ElementCompositionPreview.GetElementVisual(element).ImplicitAnimations = implicitAnimationCollection;
         }
 
         private static CompositionAnimationGroup GetGroupFromCAnimationCollection(UIElement element, CAnimationCollection animationCollection)
@@ -182,7 +183,22 @@ namespace App6
 
         private static ImplicitAnimationCollection GetImplicitAnimationCollectionFromCAnimationCollection(UIElement element, CAnimationCollection animationCollection)
         {
-            return null; //TODO
+            var visual = ElementCompositionPreview.GetElementVisual(element);
+
+            var compositor = visual.Compositor;
+            var implicitAnimations = compositor.CreateImplicitAnimationCollection();
+
+            foreach (var cAnim in animationCollection)
+            {
+                KeyFrameAnimation animation;
+                if (!string.IsNullOrWhiteSpace(cAnim.Target) 
+                    && (animation = cAnim.GetImplicitAnimation(visual)) != null)
+                {
+                    implicitAnimations[cAnim.Target] = animation;
+                }
+            }
+
+            return implicitAnimations;
         }
 
         private static void ShowCollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -233,7 +249,8 @@ namespace App6
                 return;
             }
 
-            // TODO
+            var implicitAnimationCollection = GetImplicitAnimationCollectionFromCAnimationCollection(collection.Element, collection);
+            ElementCompositionPreview.GetElementVisual(collection.Element).ImplicitAnimations = implicitAnimationCollection;
         }
     }
 
@@ -289,6 +306,28 @@ namespace App6
                                         typeof(CScalarAnimation),
                                         new PropertyMetadata(null));
 
+        public KeyFrameAnimation GetImplicitAnimation(Visual visual)
+        {
+            var animation = GetEmptyCompositionAnimation(visual);
+            if (animation == null)
+            {
+                return null;
+            }
+
+            if (string.IsNullOrWhiteSpace(Target))
+            {
+                return null;
+            }
+
+            animation.InsertExpressionKeyFrame(1.0f, "this.FinalValue");
+            animation.Target = Target;
+            animation.Duration = Duration;
+
+            return animation;
+        }
+
+        public abstract KeyFrameAnimation GetEmptyCompositionAnimation(Visual visual);
+
         public abstract CompositionAnimation GetCompositionAnimation(Visual visual);
     }
 
@@ -316,10 +355,14 @@ namespace App6
 
         private ScalarKeyFrame FromKeyFrame;
         private ScalarKeyFrame ToKeyFrame;
-
+        
         public override CompositionAnimation GetCompositionAnimation(Visual visual)
         {
-            var compositor = visual.Compositor;
+            var compositor = visual?.Compositor;
+            if (compositor == null)
+            {
+                return null;
+            }
 
             if (string.IsNullOrWhiteSpace(Target))
             {
@@ -370,6 +413,17 @@ namespace App6
             }
 
             return animation;
+        }
+
+        public override KeyFrameAnimation GetEmptyCompositionAnimation(Visual visual)
+        {
+            var compositor = visual?.Compositor;
+            if (compositor == null)
+            {
+                return null;
+            }
+
+            return compositor.CreateScalarKeyFrameAnimation();
         }
     }
 
@@ -482,6 +536,17 @@ namespace App6
             }
 
             return vector;
+        }
+
+        public override KeyFrameAnimation GetEmptyCompositionAnimation(Visual visual)
+        {
+            var compositor = visual?.Compositor;
+            if (compositor == null)
+            {
+                return null;
+            }
+
+            return compositor.CreateVector3KeyFrameAnimation();
         }
     }
 
