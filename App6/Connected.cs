@@ -12,7 +12,6 @@ namespace App6
 {
     public class Connected
     {
-        private static Frame _frame;
         private static List<ConnectedAnimationDetails> FromBuffer = new List<ConnectedAnimationDetails>();
         private static List<ConnectedAnimationDetails> ToBuffer = new List<ConnectedAnimationDetails>();
 
@@ -23,6 +22,24 @@ namespace App6
         //private static Dictionary<Type, Stack<ConnectedAnimationDetails>> _animations = new Dictionary<Type, Stack<ConnectedAnimationDetails>>();
         //private static Stack<ConnectedAnimationDetails> _orphanAnimations = new Stack<ConnectedAnimationDetails>();
         private static Dictionary<UIElement, List<UIElement>> _coordinatedAnimationElements = new Dictionary<UIElement, List<UIElement>>();
+
+        private static Frame _navigationFrame;
+
+        public static Frame NavigationFrame
+        {
+            get
+            {
+                return _navigationFrame;
+            }
+
+            set
+            {
+                _navigationFrame = value;
+                _navigationFrame.Navigating += _frame_Navigating;
+                _navigationFrame.Navigated += _frame_Navigated;
+            }
+        }
+
 
         //private static void SwapBuffers()
         //{
@@ -53,17 +70,6 @@ namespace App6
         //    }
         //}
 
-        private static void SetupFrame(Frame frame)
-        {
-            if (frame == null)
-            {
-                return;
-            }
-
-            _frame = frame;
-            
-        }
-
         private static void _frame_Navigated(object sender, Windows.UI.Xaml.Navigation.NavigationEventArgs e)
         {
 
@@ -76,7 +82,7 @@ namespace App6
                 //HandleTheOrphans();
                 var cas = ConnectedAnimationService.GetForCurrentView();
 
-                var currentPage = _frame.CurrentSourcePageType;
+                var currentPage = NavigationFrame.CurrentSourcePageType;
                 if (e.NavigationMode == Windows.UI.Xaml.Navigation.NavigationMode.Forward ||
                     e.NavigationMode == Windows.UI.Xaml.Navigation.NavigationMode.New)
                 {
@@ -143,7 +149,7 @@ namespace App6
                 
             };
 
-            var navigatedPage = _frame.Content as Page;
+            var navigatedPage = NavigationFrame.Content as Page;
             navigatedPage.Loaded += handler;
             
         }
@@ -206,11 +212,9 @@ namespace App6
 
         private static void OnFromKeyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (_frame == null && Window.Current.Content is Frame frame)
+            if (NavigationFrame == null && Window.Current.Content is Frame frame)
             {
-                _frame = frame;
-                _frame.Navigating += _frame_Navigating;
-                _frame.Navigated += _frame_Navigated;
+                NavigationFrame = frame;
             }
 
             if (d is FrameworkElement element)
@@ -245,11 +249,9 @@ namespace App6
 
         private static void OnToKeyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            if (_frame == null && Window.Current.Content is Frame frame)
+            if (NavigationFrame == null && Window.Current.Content is Frame frame)
             {
-                _frame = frame;
-                _frame.Navigating += _frame_Navigating;
-                _frame.Navigated += _frame_Navigated;
+                NavigationFrame = frame;
             }
 
             if (d is FrameworkElement element)
@@ -387,11 +389,9 @@ namespace App6
         }
         private static void SetupFrame()
         {
-            if (_frame == null && Window.Current.Content is Frame frame)
+            if (NavigationFrame == null && Window.Current.Content is Frame frame)
             {
-                _frame = frame;
-                _frame.Navigating += _frame_Navigating;
-                _frame.Navigated += _frame_Navigated;
+                NavigationFrame = frame;
             }
         }
 
