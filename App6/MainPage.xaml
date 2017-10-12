@@ -12,6 +12,7 @@
             <Button Click="Button_Click" Content="Visibility (1)"></Button>
             <Button Click="Button_Click_1" Content="Move Me (2)"></Button>
             <Button Click="Button_Click_2" Content="Scale Me (2)"></Button>
+            <Button Click="ConnectedClick" Content="Connected Animation"></Button>
         </StackPanel>
         
         <Grid Height="100" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Center" >
@@ -37,7 +38,7 @@
         </Grid>
 
         <Canvas>
-            <Border x:Name="Element2" Height="100" Width="100" Background="Purple">
+            <Border x:Name="Element2" Height="100" Width="100" Background="Purple" local:Connected.Key="image">
                 <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="40" Foreground="White">2</TextBlock>
 
                 <local:Implicit.Animations>

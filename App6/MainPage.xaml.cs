@@ -13,6 +13,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
@@ -36,7 +37,6 @@ namespace App6
             base.OnNavigatedTo(e);
             var visual = ElementCompositionPreview.GetElementVisual(Element2);
             visual.CenterPoint = new Vector3(50f, 50f, 1);
-
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -56,7 +56,11 @@ namespace App6
             visual.Scale = new Vector3((float)random.NextDouble() * 2,
                                        (float)random.NextDouble() * 2,
                                        1);
+        }
 
+        private void ConnectedClick(object sender, RoutedEventArgs e)
+        {
+            this.Frame.Navigate(typeof(Second_Page));
         }
     }
 }

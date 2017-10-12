@@ -175,6 +175,11 @@ namespace App6
                 if (compositionAnimation != null)
                 {
                     animationGroup.Add(compositionAnimation);
+
+                    if (cAnim.Target.StartsWith("Translation"))
+                    {
+                        ElementCompositionPreview.SetIsTranslationEnabled(element, true);
+                    }
                 }
             }
 
@@ -202,6 +207,11 @@ namespace App6
                         animations[target] = compositor.CreateAnimationGroup();
                     }
                     animations[target].Add(animation);
+
+                    if (cAnim.Target.StartsWith("Translation"))
+                    {
+                        ElementCompositionPreview.SetIsTranslationEnabled(element, true);
+                    }
                 }
             }
 
@@ -570,6 +580,14 @@ namespace App6
         public RotationAnimation()
         {
             Target = "RotationAngle";
+        }
+    }
+
+    public class TranslationAnimation : CVector3Animation
+    {
+        public TranslationAnimation()
+        {
+            Target = "Translation";
         }
     }
 
