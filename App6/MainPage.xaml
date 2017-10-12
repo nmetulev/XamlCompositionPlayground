@@ -38,7 +38,7 @@
         </Grid>
 
         <Canvas>
-            <Border x:Name="Element2" Height="100" Width="100" Background="Purple" local:Connected.Key="image">
+            <Border x:Name="Element2" Height="100" Width="100" Background="Purple" local:Connected.FromKey="image">
                 <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="40" Foreground="White">2</TextBlock>
 
                 <local:Implicit.Animations>
