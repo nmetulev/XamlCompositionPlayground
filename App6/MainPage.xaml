@@ -13,6 +13,7 @@
             <Button Click="Button_Click_1" Content="Move Me (2)"></Button>
             <Button Click="Button_Click_2" Content="Scale Me (2)"></Button>
             <Button Click="ConnectedClick" Content="Connected Animation"></Button>
+            <Button Click="DetailsPageClick" Content="Details Page"></Button>
         </StackPanel>
         
         <Grid Height="100" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Center" >
@@ -38,7 +39,7 @@
         </Grid>
 
         <Canvas>
-            <Border x:Name="Element2" Height="100" Width="100" Background="Purple" local:Connected.FromKey="image">
+            <Border x:Name="Element2" Height="100" Width="100" Background="Purple" local:Connected.FromKey="image" local:Connected.TargetPageType="local:Second_Page">
                 <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="40" Foreground="White">2</TextBlock>
 
                 <local:Implicit.Animations>

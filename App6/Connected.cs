@@ -80,8 +80,11 @@ namespace App6
                 if (e.NavigationMode == Windows.UI.Xaml.Navigation.NavigationMode.Forward ||
                     e.NavigationMode == Windows.UI.Xaml.Navigation.NavigationMode.New)
                 {
-                    foreach (var anim in ToBuffer)
+                    var i = 0;
+                    while (i < ToBuffer.Count)
                     {
+                        var anim = ToBuffer[i];
+
                         var connectedAnimation = cas.GetAnimation(anim.Key);
                         if (connectedAnimation != null)
                         {
@@ -93,6 +96,11 @@ namespace App6
                             {
                                 connectedAnimation.TryStart(anim.Element);
                             }
+                            i++;
+                        }
+                        else
+                        {
+                            ToBuffer.Remove(anim);
                         }
                     }
                 }
@@ -151,7 +159,10 @@ namespace App6
             {
                 foreach (var anim in FromBuffer)
                 {
-                    cas.PrepareToAnimate(anim.Key, anim.Element);
+                    if (anim.TargetPageType == null || anim.TargetPageType == e.SourcePageType)
+                    {
+                        cas.PrepareToAnimate(anim.Key, anim.Element);
+                    }
                 }
 
                 if (e.Parameter != null)
@@ -204,10 +215,12 @@ namespace App6
 
             if (d is FrameworkElement element)
             {
+                var targetPage = GetTargetPageType(element);
                 var animation = new ConnectedAnimationDetails()
                 {
                     Key = e.NewValue as string,
-                    Element = element
+                    Element = element,
+                    TargetPageType = targetPage
                 };
 
                 FromBuffer.Add(animation);
@@ -249,6 +262,33 @@ namespace App6
 
                 ToBuffer.Add(animation);
             }
+        }
+
+        public static Type GetTargetPageType(DependencyObject obj)
+        {
+            return (Type)obj.GetValue(TargetPageTypeProperty);
+        }
+
+        public static void SetTargetPageType(DependencyObject obj, Type value)
+        {
+            obj.SetValue(TargetPageTypeProperty, value);
+        }
+
+        // Using a DependencyProperty as the backing store for TargetPageType.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty TargetPageTypeProperty =
+            DependencyProperty.RegisterAttached("TargetPageType", typeof(Type), typeof(Connected), new PropertyMetadata(null, OnTargetTypeChanged));
+
+
+        private static void OnTargetTypeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var anim = FromBuffer.Where(a => a.Element == d as UIElement).FirstOrDefault();
+
+            if (anim == null)
+            {
+                return;
+            }
+
+            anim.TargetPageType = e.NewValue as Type;
         }
 
         public static UIElement GetAnchorElement(DependencyObject obj)
@@ -412,6 +452,7 @@ namespace App6
             public string Key { get; set; }
             public UIElement Element { get; set; }
             public List<UIElement> CoordinatedElements { get; set; }
+            public Type TargetPageType { get; set; }
         }
     }
 

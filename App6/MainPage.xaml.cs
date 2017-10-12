@@ -62,5 +62,10 @@ namespace App6
         {
             this.Frame.Navigate(typeof(Second_Page));
         }
+
+        private void DetailsPageClick(object sender, RoutedEventArgs e)
+        {
+            Frame.Navigate(typeof(DetailsPage));
+        }
     }
 }
