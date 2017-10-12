@@ -9,10 +9,11 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.UI.Composition;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Markup;
 
-namespace App6
+namespace ToolkitPreview
 {
     public class Implicit
     {
@@ -68,6 +69,24 @@ namespace App6
             obj.SetValue(AnimationsProperty, value);
         }
 
+        //public static CAnimationCollection GetListShowAnimations(DependencyObject obj)
+        //{
+        //    var collection = (CAnimationCollection)obj.GetValue(ListShowAnimationsProperty);
+
+        //    if (collection == null)
+        //    {
+        //        collection = new CAnimationCollection();
+        //        obj.SetValue(ListShowAnimationsProperty, collection);
+        //    }
+
+        //    return collection;
+        //}
+
+        //public static void SetListShowAnimations(DependencyObject obj, CAnimationCollection value)
+        //{
+        //    obj.SetValue(ListShowAnimationsProperty, value);
+        //}
+
         // Using a DependencyProperty as the backing store for ShowAnimations.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ShowAnimationsProperty =
             DependencyProperty.RegisterAttached("ShowAnimations", 
@@ -88,6 +107,64 @@ namespace App6
                                                 typeof(CAnimationCollection), 
                                                 typeof(Implicit), 
                                                 new PropertyMetadata(null, AnimationsChanged));
+
+
+
+        // Using a DependencyProperty as the backing store for ListShowAnimations.  This enables animation, styling, binding, etc...
+        //public static readonly DependencyProperty ListShowAnimationsProperty =
+        //    DependencyProperty.RegisterAttached("ListShowAnimations", 
+        //                                        typeof(CAnimationCollection), 
+        //                                        typeof(Implicit), 
+        //                                        new PropertyMetadata(null, ListShowAnimationChanged));
+
+        //private static void ListShowAnimationChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        //{
+        //    if (e.OldValue is CAnimationCollection oldCollection)
+        //    {
+        //        //oldCollection.CollectionChanged -= ShowCollectionChanged; //TODO
+        //    }
+
+        //    if (!(d is ListViewBase listViewBase))
+        //    {
+        //        return;
+        //    }
+
+        //    if (!(e.NewValue is CAnimationCollection animationCollection))
+        //    {
+        //        return;
+        //    }
+
+        //    //listViewBase.ContainerContentChanging += ListViewBase_ContainerContentChanging;
+        //    listViewBase.ChoosingItemContainer += ListViewBase_ChoosingItemContainer;
+        //    listViewBase.ItemContainerTransitions = null;
+        //}
+
+        //private static void ListViewBase_ChoosingItemContainer(ListViewBase sender, ChoosingItemContainerEventArgs args)
+        //{
+        //    if (args.ItemContainer == null)
+        //    {
+        //        // only support ListView and GridView
+        //        if (sender is ListView lv)
+        //        {
+        //            args.ItemContainer = new ListViewItem();
+        //        }
+        //        else if (sender is GridView gv)
+        //        {
+        //            args.ItemContainer = new GridViewItem();
+        //        }
+        //        else
+        //        {
+        //            return;
+        //        }
+        //    }
+
+        //    SetShowAnimations(args.ItemContainer, GetListShowAnimations(sender));
+        //}
+
+        //private static void ListViewBase_ContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
+        //{
+        //    SetShowAnimations(args.ItemContainer, GetListShowAnimations(sender));
+        //}
 
         private static void ShowAnimationsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -313,6 +390,12 @@ namespace App6
             set { SetValue(ImplicitTargetProperty, value); }
         }
 
+        public TimeSpan Delay
+        {
+            get { return (TimeSpan)GetValue(DelayProperty); }
+            set { SetValue(DelayProperty, value); }
+        }
+
         // Using a DependencyProperty as the backing store for Target.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty TargetProperty =
             DependencyProperty.Register("Target",
@@ -325,7 +408,7 @@ namespace App6
             DependencyProperty.Register("Duration", 
                                         typeof(TimeSpan), 
                                         typeof(CAnimation), 
-                                        new PropertyMetadata(TimeSpan.Zero));
+                                        new PropertyMetadata(TimeSpan.FromMilliseconds(400)));
 
         // Using a DependencyProperty as the backing store for ScalarKeyFrames.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty ScalarKeyFramesProperty =
@@ -340,6 +423,15 @@ namespace App6
                                         typeof(string), 
                                         typeof(CAnimation), 
                                         new PropertyMetadata(null));
+
+        // Using a DependencyProperty as the backing store for Delay.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty DelayProperty =
+            DependencyProperty.Register("Delay", 
+                                        typeof(TimeSpan), 
+                                        typeof(CAnimation), 
+                                        new PropertyMetadata(TimeSpan.Zero));
+
+
 
         public abstract CompositionAnimation GetCompositionAnimation(Visual visual);
     }
@@ -386,6 +478,7 @@ namespace App6
             var animation = compositor.CreateScalarKeyFrameAnimation();
             animation.Target = Target;
             animation.Duration = Duration;
+            animation.DelayTime = Delay;
 
             if (KeyFrames.Count == 0)
             {
@@ -472,6 +565,7 @@ namespace App6
             var animation = compositor.CreateVector3KeyFrameAnimation();
             animation.Target = Target;
             animation.Duration = Duration;
+            animation.DelayTime = Delay;
 
             if (KeyFrames.Count == 0)
             {

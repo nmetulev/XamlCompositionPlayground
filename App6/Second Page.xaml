@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:App6"
+    xmlns:toolkit="using:ToolkitPreview"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
@@ -13,20 +14,24 @@
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal">
-            <Border x:Name="HeroElement" Height="300" Width="300" Background="Purple" local:Connected.ToKey="image"></Border>
-            <StackPanel x:Name="HeroDetailsElement" Margin="20,0" VerticalAlignment="Bottom" MaxWidth="500" local:Connected.AnchorElement="{x:Bind HeroElement}">
+            <Border x:Name="HeroElement" Height="300" Width="300" Background="Purple" toolkit:Connected.ToKey="image"></Border>
+            <StackPanel x:Name="HeroDetailsElement" Margin="20,0" VerticalAlignment="Bottom" MaxWidth="500" toolkit:Connected.AnchorElement="{x:Bind HeroElement}">
                 <TextBlock Text="Header" FontSize="50"></TextBlock>
                 <TextBlock TextWrapping="WrapWholeWords">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce eleifend ex sit amet blandit lobortis. Curabitur ut diam fringilla, interdum massa sit amet, facilisis erat. Donec vulputate sed ex vel pellentesque. In sodales odio non felis interdum viverra. Morbi in mi mollis, ullamcorper nibh sit amet, sagittis ex. Maecenas dapibus commodo venenatis. Donec at egestas est.</TextBlock>
             </StackPanel>
 
-            <TextBlock local:Connected.AnchorElement="{x:Bind HeroElement}">This better work</TextBlock>
+            <TextBlock toolkit:Connected.AnchorElement="{x:Bind HeroElement}">This better work</TextBlock>
         </StackPanel>
 
         <GridView x:Name="listView" Margin="0, 40" SelectionMode="None" 
                   Grid.Row="1"
                       ItemClick="listView_ItemClick" IsItemClickEnabled="True"
-                      local:Connected.ListItemElementName="ItemThumbnail"
-                      local:Connected.ListItemFromKey="ItemAnimation">
+                      toolkit:Connected.ListItemElementName="ItemThumbnail"
+                      toolkit:Connected.ListItemFromKey="ItemAnimation">
+            <!--<toolkit:Implicit.ListShowAnimations>
+                <toolkit:OpacityAnimation From="0" To="1" Duration="0:0:0.4"></toolkit:OpacityAnimation>
+                <toolkit:TranslationAnimation From="0, 20, 0" To="0" Duration="0:0:0.4"></toolkit:TranslationAnimation>
+            </toolkit:Implicit.ListShowAnimations>-->
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="local:Item">
                     <StackPanel>

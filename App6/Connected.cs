@@ -8,19 +8,18 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
 
-namespace App6
+namespace ToolkitPreview
 {
     public class Connected
     {
         private static List<ConnectedAnimationDetails> FromBuffer = new List<ConnectedAnimationDetails>();
         private static List<ConnectedAnimationDetails> ToBuffer = new List<ConnectedAnimationDetails>();
 
+        private static Dictionary<string, ConnectedAnimationDetails> oldFromBuffer = new Dictionary<string, ConnectedAnimationDetails>();
+
         private static List<ConnectedListViewBaseAnimationDetails> ListViewBaseFromBuffer = new List<ConnectedListViewBaseAnimationDetails>();
         private static List<ConnectedListViewBaseAnimationDetails> ListViewBaseToBuffer = new List<ConnectedListViewBaseAnimationDetails>();
-        //private static List<ConnectedAnimationDetails> previousBuffer = new List<ConnectedAnimationDetails>();
 
-        //private static Dictionary<Type, Stack<ConnectedAnimationDetails>> _animations = new Dictionary<Type, Stack<ConnectedAnimationDetails>>();
-        //private static Stack<ConnectedAnimationDetails> _orphanAnimations = new Stack<ConnectedAnimationDetails>();
         private static Dictionary<UIElement, List<UIElement>> _coordinatedAnimationElements = new Dictionary<UIElement, List<UIElement>>();
 
         private static Frame _navigationFrame;
@@ -40,46 +39,14 @@ namespace App6
             }
         }
 
-
-        //private static void SwapBuffers()
-        //{
-        //    var temp = currentBuffer;
-        //    currentBuffer = previousBuffer;
-        //    previousBuffer = temp;
-        //}
-
-        //private static void AddAnimation(Type pageType, ConnectedAnimationDetails animation)
-        //{
-        //    if (!_animations.TryGetValue(pageType, out var animationsList))
-        //    {
-        //        animationsList = new Stack<ConnectedAnimationDetails>();
-        //        _animations[pageType] = animationsList;
-        //    }
-
-        //    animationsList.Push(animation);
-        //}
-
-        //private static void HandleTheOrphans()
-        //{
-        //    if (_frame != null && _frame.CurrentSourcePageType != null)
-        //    {
-        //        while (_orphanAnimations.Count > 0)
-        //        {
-        //            AddAnimation(_frame.CurrentSourcePageType, _orphanAnimations.Pop());
-        //        }
-        //    }
-        //}
-
         private static void _frame_Navigated(object sender, Windows.UI.Xaml.Navigation.NavigationEventArgs e)
         {
-
             RoutedEventHandler handler = null;
             handler = (s, args) =>
             {
                 var page = s as Page;
                 page.Loaded -= handler;
 
-                //HandleTheOrphans();
                 var cas = ConnectedAnimationService.GetForCurrentView();
 
                 var currentPage = NavigationFrame.CurrentSourcePageType;
@@ -108,6 +75,21 @@ namespace App6
                         {
                             ToBuffer.Remove(anim);
                         }
+
+                        if (oldFromBuffer.ContainsKey(anim.Key))
+                        {
+                            oldFromBuffer.Remove(anim.Key);
+                        }
+                    }
+
+                    // if there are animations that were prepared on previous page but no elements on this page have the same key - cancel
+                    foreach (var oldAnim in oldFromBuffer)
+                    {
+                        var connectedAnimation = cas.GetAnimation(oldAnim.Key);
+                        if (connectedAnimation != null)
+                        {
+                            connectedAnimation.Cancel();
+                        }
                     }
                 }
                 else if (e.NavigationMode == Windows.UI.Xaml.Navigation.NavigationMode.Back)
@@ -128,7 +110,7 @@ namespace App6
                         }
                     }
 
-                    var sourcePage = (sender as Frame).ForwardStack.FirstOrDefault();
+                    var sourcePage = (sender as Frame).ForwardStack.LastOrDefault();
                     if (sourcePage != null && sourcePage.Parameter != null)
                     {
                         foreach (var anim in ListViewBaseFromBuffer)
@@ -146,7 +128,8 @@ namespace App6
                         }
                     }
                 }
-                
+
+                oldFromBuffer.Clear();
             };
 
             var navigatedPage = NavigationFrame.Content as Page;
@@ -158,17 +141,13 @@ namespace App6
         {
             var cas = ConnectedAnimationService.GetForCurrentView();
 
-            //var currentPage = _frame.CurrentSourcePageType;
-            //var targetPage = e.SourcePageType;
             if (e.NavigationMode == Windows.UI.Xaml.Navigation.NavigationMode.Forward ||
                 e.NavigationMode == Windows.UI.Xaml.Navigation.NavigationMode.New)
             {
                 foreach (var anim in FromBuffer)
                 {
-                    if (anim.TargetPageType == null || anim.TargetPageType == e.SourcePageType)
-                    {
-                        cas.PrepareToAnimate(anim.Key, anim.Element);
-                    }
+                    cas.PrepareToAnimate(anim.Key, anim.Element);
+                    oldFromBuffer[anim.Key] = anim;
                 }
 
                 if (e.Parameter != null)
@@ -185,7 +164,6 @@ namespace App6
                 {
                     cas.PrepareToAnimate(anim.Key, anim.Element);
                 }
-                ///TODO
             }
 
             
@@ -219,12 +197,10 @@ namespace App6
 
             if (d is FrameworkElement element)
             {
-                var targetPage = GetTargetPageType(element);
                 var animation = new ConnectedAnimationDetails()
                 {
                     Key = e.NewValue as string,
                     Element = element,
-                    TargetPageType = targetPage
                 };
 
                 FromBuffer.Add(animation);
@@ -264,33 +240,6 @@ namespace App6
 
                 ToBuffer.Add(animation);
             }
-        }
-
-        public static Type GetTargetPageType(DependencyObject obj)
-        {
-            return (Type)obj.GetValue(TargetPageTypeProperty);
-        }
-
-        public static void SetTargetPageType(DependencyObject obj, Type value)
-        {
-            obj.SetValue(TargetPageTypeProperty, value);
-        }
-
-        // Using a DependencyProperty as the backing store for TargetPageType.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty TargetPageTypeProperty =
-            DependencyProperty.RegisterAttached("TargetPageType", typeof(Type), typeof(Connected), new PropertyMetadata(null, OnTargetTypeChanged));
-
-
-        private static void OnTargetTypeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            var anim = FromBuffer.Where(a => a.Element == d as UIElement).FirstOrDefault();
-
-            if (anim == null)
-            {
-                return;
-            }
-
-            anim.TargetPageType = e.NewValue as Type;
         }
 
         public static UIElement GetAnchorElement(DependencyObject obj)
@@ -452,7 +401,6 @@ namespace App6
             public string Key { get; set; }
             public UIElement Element { get; set; }
             public List<UIElement> CoordinatedElements { get; set; }
-            public Type TargetPageType { get; set; }
         }
     }
 

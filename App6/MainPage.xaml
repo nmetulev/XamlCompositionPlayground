@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:App6"
+    xmlns:toolkit="using:ToolkitPreview"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
@@ -19,36 +20,36 @@
         <Grid Height="100" Width="100" VerticalAlignment="Bottom" HorizontalAlignment="Center" >
             <Border x:Name="Element" Height="100" Width="100" Background="Red" Margin="0, 0,0,-200">
                 <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="40" Foreground="White">1</TextBlock>
-                
-                <local:Implicit.ShowAnimations>
-                    <!--<local:CScalarAnimation Target="Offset.Y" Duration="0:0:1" To="0.0"></local:CScalarAnimation>-->
-                    <!--<local:CVector3Animation Target="Offset" Duration="0:0:1" To="-50, -50, 0" ></local:CVector3Animation>-->
-                    <local:OffsetAnimation Duration="0:0:1" To="-50, -50, 0" ></local:OffsetAnimation>
-                    <local:OpacityAnimation Duration="0:0:1" To="1.0"></local:OpacityAnimation>
-                </local:Implicit.ShowAnimations>
-                
-                <local:Implicit.HideAnimations>
-                    <local:CScalarAnimation Target="Opacity" Duration="0:0:1" To="0.0"></local:CScalarAnimation>
-                    <local:CScalarAnimation Target="Offset.Y" Duration="0:0:1" To="100.0">
-                        <local:ScalarKeyFrame Key="0.1" Value="-50.0"></local:ScalarKeyFrame>
-                        <local:ScalarKeyFrame Key="0.5" Value="0.0"></local:ScalarKeyFrame>
-                    </local:CScalarAnimation>
-                </local:Implicit.HideAnimations>
+
+                <toolkit:Implicit.ShowAnimations>
+                    <!--<toolkit:CScalarAnimation Target="Offset.Y" Duration="0:0:1" To="0.0"></toolkit:CScalarAnimation>-->
+                    <!--<toolkit:CVector3Animation Target="Offset" Duration="0:0:1" To="-50, -50, 0" ></toolkit:CVector3Animation>-->
+                    <toolkit:OffsetAnimation Duration="0:0:1" To="-50, -50, 0" ></toolkit:OffsetAnimation>
+                    <toolkit:OpacityAnimation Duration="0:0:1" To="1.0"></toolkit:OpacityAnimation>
+                </toolkit:Implicit.ShowAnimations>
+
+                <toolkit:Implicit.HideAnimations>
+                    <toolkit:CScalarAnimation Target="Opacity" Duration="0:0:1" To="0.0"></toolkit:CScalarAnimation>
+                    <toolkit:CScalarAnimation Target="Offset.Y" Duration="0:0:1" To="100.0">
+                        <toolkit:ScalarKeyFrame Key="0.1" Value="-50.0"></toolkit:ScalarKeyFrame>
+                        <toolkit:ScalarKeyFrame Key="0.5" Value="0.0"></toolkit:ScalarKeyFrame>
+                    </toolkit:CScalarAnimation>
+                </toolkit:Implicit.HideAnimations>
                 
             </Border>
         </Grid>
 
         <Canvas>
-            <Border x:Name="Element2" Height="100" Width="100" Background="Purple" local:Connected.FromKey="image" local:Connected.TargetPageType="local:Second_Page">
+            <Border x:Name="Element2" Height="100" Width="100" Background="Purple" toolkit:Connected.FromKey="image" >
                 <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="40" Foreground="White">2</TextBlock>
 
-                <local:Implicit.Animations>
-                    <local:CVector3Animation Target="Offset"  Duration="0:0:1"></local:CVector3Animation>
-                    <local:CScalarAnimation Target="RotationAngleInDegrees" ImplicitTarget="Offset"  Duration="0:0:1.2" From="0" To="0">
-                        <local:ScalarKeyFrame Key="0.9" Value="80"></local:ScalarKeyFrame>
-                    </local:CScalarAnimation>
-                    <local:CVector3Animation Target="Scale" Duration="0:0:1"></local:CVector3Animation>
-                </local:Implicit.Animations>
+                <toolkit:Implicit.Animations>
+                    <toolkit:CVector3Animation Target="Offset"  Duration="0:0:1"></toolkit:CVector3Animation>
+                    <toolkit:CScalarAnimation Target="RotationAngleInDegrees" ImplicitTarget="Offset"  Duration="0:0:1.2" From="0" To="0">
+                        <toolkit:ScalarKeyFrame Key="0.9" Value="80"></toolkit:ScalarKeyFrame>
+                    </toolkit:CScalarAnimation>
+                    <toolkit:CVector3Animation Target="Scale" Duration="0:0:1"></toolkit:CVector3Animation>
+                </toolkit:Implicit.Animations>
             </Border>
         </Canvas>
         
