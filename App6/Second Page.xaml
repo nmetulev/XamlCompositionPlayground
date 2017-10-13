@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
+    
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" Padding="40">
         <Grid.RowDefinitions>
@@ -14,7 +15,8 @@
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal">
-            <Border x:Name="HeroElement" Height="300" Width="300" Background="Purple" toolkit:Connected.ToKey="image"></Border>
+            
+            <Border x:Name="HeroElement" Height="300" Width="300" Background="Purple" toolkit:Connected.Key="image"></Border>
             <StackPanel x:Name="HeroDetailsElement" Margin="20,0" VerticalAlignment="Bottom" MaxWidth="500" toolkit:Connected.AnchorElement="{x:Bind HeroElement}">
                 <TextBlock Text="Header" FontSize="50"></TextBlock>
                 <TextBlock TextWrapping="WrapWholeWords">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce eleifend ex sit amet blandit lobortis. Curabitur ut diam fringilla, interdum massa sit amet, facilisis erat. Donec vulputate sed ex vel pellentesque. In sodales odio non felis interdum viverra. Morbi in mi mollis, ullamcorper nibh sit amet, sagittis ex. Maecenas dapibus commodo venenatis. Donec at egestas est.</TextBlock>
@@ -27,7 +29,7 @@
                   Grid.Row="1"
                       ItemClick="listView_ItemClick" IsItemClickEnabled="True"
                       toolkit:Connected.ListItemElementName="ItemThumbnail"
-                      toolkit:Connected.ListItemFromKey="ItemAnimation">
+                      toolkit:Connected.ListItemKey="ItemAnimation">
             <!--<toolkit:Implicit.ListShowAnimations>
                 <toolkit:OpacityAnimation From="0" To="1" Duration="0:0:0.4"></toolkit:OpacityAnimation>
                 <toolkit:TranslationAnimation From="0, 20, 0" To="0" Duration="0:0:0.4"></toolkit:TranslationAnimation>

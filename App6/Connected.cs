@@ -12,14 +12,8 @@ namespace ToolkitPreview
 {
     public class Connected
     {
-        private static List<ConnectedAnimationDetails> FromBuffer = new List<ConnectedAnimationDetails>();
-        private static List<ConnectedAnimationDetails> ToBuffer = new List<ConnectedAnimationDetails>();
-
-        private static Dictionary<string, ConnectedAnimationDetails> oldFromBuffer = new Dictionary<string, ConnectedAnimationDetails>();
-
-        private static List<ConnectedListViewBaseAnimationDetails> ListViewBaseFromBuffer = new List<ConnectedListViewBaseAnimationDetails>();
-        private static List<ConnectedListViewBaseAnimationDetails> ListViewBaseToBuffer = new List<ConnectedListViewBaseAnimationDetails>();
-
+        private static List<ConnectedAnimationProperties> _connectedAnnimationsProps = new List<ConnectedAnimationProperties>();
+        private static Dictionary<string, ConnectedAnimationProperties> _previousPageConnectedAnimationProps = new Dictionary<string, ConnectedAnimationProperties>();
         private static Dictionary<UIElement, List<UIElement>> _coordinatedAnimationElements = new Dictionary<UIElement, List<UIElement>>();
 
         private static Frame _navigationFrame;
@@ -41,95 +35,77 @@ namespace ToolkitPreview
 
         private static void _frame_Navigated(object sender, Windows.UI.Xaml.Navigation.NavigationEventArgs e)
         {
+            // make sure all bindings and properties have been set
             RoutedEventHandler handler = null;
             handler = (s, args) =>
             {
                 var page = s as Page;
                 page.Loaded -= handler;
 
+                object parameter;
+                if (e.NavigationMode == Windows.UI.Xaml.Navigation.NavigationMode.Back)
+                {
+                    var sourcePage = (sender as Frame).ForwardStack.LastOrDefault();
+                    parameter = sourcePage?.Parameter ?? null;
+                }
+                else
+                {
+                    parameter = e.Parameter;
+                }
+
                 var cas = ConnectedAnimationService.GetForCurrentView();
 
-                var currentPage = NavigationFrame.CurrentSourcePageType;
-                if (e.NavigationMode == Windows.UI.Xaml.Navigation.NavigationMode.Forward ||
-                    e.NavigationMode == Windows.UI.Xaml.Navigation.NavigationMode.New)
+                foreach (var props in _connectedAnnimationsProps)
                 {
-                    var i = 0;
-                    while (i < ToBuffer.Count)
+                    var connectedAnimation = cas.GetAnimation(props.Key);
+                    if (connectedAnimation != null)
                     {
-                        var anim = ToBuffer[i];
-
-                        var connectedAnimation = cas.GetAnimation(anim.Key);
-                        if (connectedAnimation != null)
+                        if (props.IsListAnimation && parameter != null)
                         {
-                            if (_coordinatedAnimationElements.TryGetValue(anim.Element, out var coordinatedElements))
+                            props.ListViewBase.ScrollIntoView(parameter);
+                            // give time to the ui thread to scroll the list
+                            var t = props.ListViewBase.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                             {
-                                connectedAnimation.TryStart(anim.Element, coordinatedElements);
-                            }
-                            else
-                            {
-                                connectedAnimation.TryStart(anim.Element);
-                            }
-                            i++;
-                        }
-                        else
-                        {
-                            ToBuffer.Remove(anim);
-                        }
-
-                        if (oldFromBuffer.ContainsKey(anim.Key))
-                        {
-                            oldFromBuffer.Remove(anim.Key);
-                        }
-                    }
-
-                    // if there are animations that were prepared on previous page but no elements on this page have the same key - cancel
-                    foreach (var oldAnim in oldFromBuffer)
-                    {
-                        var connectedAnimation = cas.GetAnimation(oldAnim.Key);
-                        if (connectedAnimation != null)
-                        {
-                            connectedAnimation.Cancel();
-                        }
-                    }
-                }
-                else if (e.NavigationMode == Windows.UI.Xaml.Navigation.NavigationMode.Back)
-                {
-                    foreach (var anim in FromBuffer)
-                    {
-                        var connectedAnimation = cas.GetAnimation(anim.Key);
-                        if (connectedAnimation != null)
-                        {
-                            if (_coordinatedAnimationElements.TryGetValue(anim.Element, out var coordinatedElements))
-                            {
-                                connectedAnimation.TryStart(anim.Element, coordinatedElements);
-                            }
-                            else
-                            {
-                                connectedAnimation.TryStart(anim.Element);
-                            }
-                        }
-                    }
-
-                    var sourcePage = (sender as Frame).ForwardStack.LastOrDefault();
-                    if (sourcePage != null && sourcePage.Parameter != null)
-                    {
-                        foreach (var anim in ListViewBaseFromBuffer)
-                        {
-                            anim.ListViewBase.ScrollIntoView(sourcePage.Parameter, ScrollIntoViewAlignment.Leading);
-                            var connectedAnimation = cas.GetAnimation(anim.Key);
-                            if (connectedAnimation != null)
-                            {
-                                var t = anim.ListViewBase.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                                try
                                 {
-                                    var success = await anim.ListViewBase.TryStartConnectedAnimationAsync(connectedAnimation, sourcePage.Parameter, anim.ElementName);
-                                });
-                            }
-
+                                    var success = await props.ListViewBase.TryStartConnectedAnimationAsync(connectedAnimation, parameter, props.ElementName);
+                                }
+                                catch (Exception)
+                                {
+                                    connectedAnimation.Cancel();
+                                }
+                            });
                         }
+                        else if (!props.IsListAnimation)
+                        {
+                            if (_coordinatedAnimationElements.TryGetValue(props.Element, out var coordinatedElements))
+                            {
+                                connectedAnimation.TryStart(props.Element, coordinatedElements);
+                            }
+                            else
+                            {
+                                connectedAnimation.TryStart(props.Element);
+                            }
+                        }
+                    }
+
+                    if (_previousPageConnectedAnimationProps.ContainsKey(props.Key))
+                    {
+                        _previousPageConnectedAnimationProps.Remove(props.Key);
                     }
                 }
 
-                oldFromBuffer.Clear();
+                // if there are animations that were prepared on previous page but no elements on this page have the same key - cancel
+                foreach (var _previousProps in _previousPageConnectedAnimationProps)
+                {
+                    var connectedAnimation = cas.GetAnimation(_previousProps.Key);
+                    if (connectedAnimation != null)
+                    {
+                        connectedAnimation.Cancel();
+                    }
+                }
+
+                _previousPageConnectedAnimationProps.Clear();
             };
 
             var navigatedPage = NavigationFrame.Content as Page;
@@ -139,107 +115,39 @@ namespace ToolkitPreview
 
         private static void _frame_Navigating(object sender, Windows.UI.Xaml.Navigation.NavigatingCancelEventArgs e)
         {
+            var parameter = e.Parameter != null && !(e.Parameter is string str && string.IsNullOrEmpty(str)) ? e.Parameter : null;
+
             var cas = ConnectedAnimationService.GetForCurrentView();
-
-            if (e.NavigationMode == Windows.UI.Xaml.Navigation.NavigationMode.Forward ||
-                e.NavigationMode == Windows.UI.Xaml.Navigation.NavigationMode.New)
+            foreach (var props in _connectedAnnimationsProps)
             {
-                foreach (var anim in FromBuffer)
+                if (props.IsListAnimation && parameter != null)
                 {
-                    cas.PrepareToAnimate(anim.Key, anim.Element);
-                    oldFromBuffer[anim.Key] = anim;
+                    props.ListViewBase.PrepareConnectedAnimation(props.Key, e.Parameter, props.ElementName);
+                }
+                else if (!props.IsListAnimation)
+                {
+                    cas.PrepareToAnimate(props.Key, props.Element);
+                }
+                else
+                {
+                    continue;
                 }
 
-                if (e.Parameter != null)
-                {
-                    foreach (var anim in ListViewBaseFromBuffer)
-                    {
-                        anim.ListViewBase.PrepareConnectedAnimation(anim.Key, e.Parameter, anim.ElementName);
-                    }
-                }
-            }
-            else if (e.NavigationMode == Windows.UI.Xaml.Navigation.NavigationMode.Back)
-            {
-                foreach (var anim in ToBuffer)
-                {
-                    cas.PrepareToAnimate(anim.Key, anim.Element);
-                }
+                _previousPageConnectedAnimationProps[props.Key] = props;
             }
 
-            
-
-            FromBuffer.Clear();
-            ToBuffer.Clear();
-            ListViewBaseFromBuffer.Clear();
+            _connectedAnnimationsProps.Clear();
             _coordinatedAnimationElements.Clear();
         }
 
-        public static string GetFromKey(DependencyObject obj)
+        public static string GetKey(DependencyObject obj)
         {
-            return (string)obj.GetValue(FromKeyProperty);
+            return (string)obj.GetValue(KeyProperty);
         }
 
-        public static void SetFromKey(DependencyObject obj, string value)
+        public static void SetKey(DependencyObject obj, string value)
         {
-            obj.SetValue(FromKeyProperty, value);
-        }
-
-        // Using a DependencyProperty as the backing store for FromKey.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty FromKeyProperty =
-            DependencyProperty.RegisterAttached("FromKey", typeof(string), typeof(Connected), new PropertyMetadata(null, OnFromKeyChanged));
-
-        private static void OnFromKeyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if (NavigationFrame == null && Window.Current.Content is Frame frame)
-            {
-                NavigationFrame = frame;
-            }
-
-            if (d is FrameworkElement element)
-            {
-                var animation = new ConnectedAnimationDetails()
-                {
-                    Key = e.NewValue as string,
-                    Element = element,
-                };
-
-                FromBuffer.Add(animation);
-            }
-        }
-
-
-
-        public static string GetToKey(DependencyObject obj)
-        {
-            return (string)obj.GetValue(ToKeyProperty);
-        }
-
-        public static void SetToKey(DependencyObject obj, string value)
-        {
-            obj.SetValue(ToKeyProperty, value);
-        }
-
-        // Using a DependencyProperty as the backing store for ToKey.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty ToKeyProperty =
-            DependencyProperty.RegisterAttached("ToKey", typeof(string), typeof(Connected), new PropertyMetadata(null, OnToKeyChanged));
-
-        private static void OnToKeyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if (NavigationFrame == null && Window.Current.Content is Frame frame)
-            {
-                NavigationFrame = frame;
-            }
-
-            if (d is FrameworkElement element)
-            {
-                var animation = new ConnectedAnimationDetails()
-                {
-                    Key = e.NewValue as string,
-                    Element = element
-                };
-
-                ToBuffer.Add(animation);
-            }
+            obj.SetValue(KeyProperty, value);
         }
 
         public static UIElement GetAnchorElement(DependencyObject obj)
@@ -252,9 +160,66 @@ namespace ToolkitPreview
             obj.SetValue(AnchorElementProperty, value);
         }
 
-        // Using a DependencyProperty as the backing store for AnchorElement.  This enables animation, styling, binding, etc...
+        public static string GetListItemKey(DependencyObject obj)
+        {
+            return (string)obj.GetValue(ListItemKeyProperty);
+        }
+
+        public static void SetListItemKey(DependencyObject obj, string value)
+        {
+            obj.SetValue(ListItemKeyProperty, value);
+        }
+
+        public static string GetListItemElementName(DependencyObject obj)
+        {
+            return (string)obj.GetValue(ListItemElementNameProperty);
+        }
+
+        public static void SetListItemElementName(DependencyObject obj, string value)
+        {
+            obj.SetValue(ListItemElementNameProperty, value);
+        }
+
+        public static readonly DependencyProperty KeyProperty =
+            DependencyProperty.RegisterAttached("Key", 
+                                                typeof(string), 
+                                                typeof(Connected), 
+                                                new PropertyMetadata(null, OnKeyChanged));
+
         public static readonly DependencyProperty AnchorElementProperty =
-            DependencyProperty.RegisterAttached("AnchorElement", typeof(UIElement), typeof(Connected), new PropertyMetadata(null, OnAnchorElementChanged));
+            DependencyProperty.RegisterAttached("AnchorElement", 
+                                                typeof(UIElement), 
+                                                typeof(Connected), 
+                                                new PropertyMetadata(null, OnAnchorElementChanged));
+
+        public static readonly DependencyProperty ListItemKeyProperty =
+            DependencyProperty.RegisterAttached("ListItemKey", 
+                                                typeof(string), 
+                                                typeof(Connected), 
+                                                new PropertyMetadata(null, OnListItemKeyChanged));
+
+
+        public static readonly DependencyProperty ListItemElementNameProperty =
+            DependencyProperty.RegisterAttached("ListItemElementName", 
+                                                typeof(string), 
+                                                typeof(Connected), 
+                                                new PropertyMetadata(null, OnListItemElementNameChanged));
+
+        private static void OnKeyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            SetupFrame();
+
+            if (d is FrameworkElement element)
+            {
+                var animation = new ConnectedAnimationProperties()
+                {
+                    Key = e.NewValue as string,
+                    Element = element,
+                };
+
+                _connectedAnnimationsProps.Add(animation);
+            }
+        }
 
         private static void OnAnchorElementChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
@@ -279,63 +244,34 @@ namespace ToolkitPreview
             list.Add(element);
         }
 
-        public static string GetListItemFromKey(DependencyObject obj)
-        {
-            return (string)obj.GetValue(ListItemFromKeyProperty);
-        }
-
-        public static void SetListItemFromKey(DependencyObject obj, string value)
-        {
-            obj.SetValue(ListItemFromKeyProperty, value);
-        }
-
-        // Using a DependencyProperty as the backing store for ListItemFromKey.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty ListItemFromKeyProperty =
-            DependencyProperty.RegisterAttached("ListItemFromKey", typeof(string), typeof(Connected), new PropertyMetadata(null, OnListItemFromKeyChanged));
-
-
-        public static string GetListItemElementName(DependencyObject obj)
-        {
-            return (string)obj.GetValue(ListItemElementNameProperty);
-        }
-
-        public static void SetListItemElementName(DependencyObject obj, string value)
-        {
-            obj.SetValue(ListItemElementNameProperty, value);
-        }
-
-        // Using a DependencyProperty as the backing store for ListItemElementName.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty ListItemElementNameProperty =
-            DependencyProperty.RegisterAttached("ListItemElementName", typeof(string), typeof(Connected), new PropertyMetadata(null, OnListItemElementNameChanged));
-
-        private static void OnListItemFromKeyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        private static void OnListItemKeyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             SetupFrame();
 
-            var clad = GetListViewBaseItemAnimationDetails(d);
-            if (clad == null)
+            var props = GetListViewBaseItemAnimationDetails(d);
+            if (props == null)
             {
                 return;
             }
 
-            ListViewBaseFromBuffer.Add(clad);
+            _connectedAnnimationsProps.Add(props);
         }
-
 
         private static void OnListItemElementNameChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             SetupFrame();
 
-            var clad = GetListViewBaseItemAnimationDetails(d);
-            if (clad == null)
+            var props = GetListViewBaseItemAnimationDetails(d);
+            if (props == null)
             {
                 return;
             }
 
-            ListViewBaseFromBuffer.Add(clad);
+            _connectedAnnimationsProps.Add(props);
 
             //TODO, need to make sure changed are updated on all attached properties 
         }
+
         private static void SetupFrame()
         {
             if (NavigationFrame == null && Window.Current.Content is Frame frame)
@@ -344,15 +280,14 @@ namespace ToolkitPreview
             }
         }
 
-        private static ConnectedListViewBaseAnimationDetails GetListViewBaseItemAnimationDetails(DependencyObject d)
+        private static ConnectedAnimationProperties GetListViewBaseItemAnimationDetails(DependencyObject d)
         {
-            // TODO, this only works for FROMKEY
             if (!(d is Windows.UI.Xaml.Controls.ListViewBase listViewBase))
             {
                 return null;
             }
             var elementName = GetListItemElementName(d);
-            var key = GetListItemFromKey(d);
+            var key = GetListItemKey(d);
 
             if (string.IsNullOrWhiteSpace(elementName) ||
                 string.IsNullOrWhiteSpace(key))
@@ -360,47 +295,23 @@ namespace ToolkitPreview
                 return null;
             }
 
-            return new ConnectedListViewBaseAnimationDetails()
+            return new ConnectedAnimationProperties()
             {
                 Key = key,
+                IsListAnimation = true,
                 ElementName = elementName,
                 ListViewBase = listViewBase
             };
         }
 
-        private static void ListViewBase_ItemClick(object sender, ItemClickEventArgs e)
-        {
-            if (!(sender is Windows.UI.Xaml.Controls.ListViewBase listViewBase))
-            {
-                return;
-            }
-
-            ConnectedAnimationService cas = ConnectedAnimationService.GetForCurrentView();
-            
-            var elementName = GetListItemElementName(listViewBase);
-            var key = GetListItemFromKey(listViewBase);
-
-            if (string.IsNullOrWhiteSpace(elementName) ||
-                string.IsNullOrWhiteSpace(key))
-            {
-                return;
-            }
-
-            listViewBase.PrepareConnectedAnimation(key, e.ClickedItem, elementName);
-        }
-
-        internal class ConnectedListViewBaseAnimationDetails
-        {
-            public string Key { get; set; }
-            public string ElementName { get; set; }
-            public Windows.UI.Xaml.Controls.ListViewBase ListViewBase { get; set; }
-        }
-
-        internal class ConnectedAnimationDetails
+        internal class ConnectedAnimationProperties
         {
             public string Key { get; set; }
             public UIElement Element { get; set; }
             public List<UIElement> CoordinatedElements { get; set; }
+            public string ElementName { get; set; }
+            public Windows.UI.Xaml.Controls.ListViewBase ListViewBase { get; set; }
+            public bool IsListAnimation { get; set; } = false;
         }
     }
 
