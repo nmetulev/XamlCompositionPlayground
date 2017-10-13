@@ -12,7 +12,7 @@ namespace ToolkitPreview
 {
     public class Connected
     {
-        private static List<ConnectedAnimationProperties> _connectedAnnimationsProps = new List<ConnectedAnimationProperties>();
+        private static List<ConnectedAnimationProperties> _connectedAnimationsProps = new List<ConnectedAnimationProperties>();
         private static Dictionary<string, ConnectedAnimationProperties> _previousPageConnectedAnimationProps = new Dictionary<string, ConnectedAnimationProperties>();
         private static Dictionary<UIElement, List<UIElement>> _coordinatedAnimationElements = new Dictionary<UIElement, List<UIElement>>();
 
@@ -55,7 +55,7 @@ namespace ToolkitPreview
 
                 var cas = ConnectedAnimationService.GetForCurrentView();
 
-                foreach (var props in _connectedAnnimationsProps)
+                foreach (var props in _connectedAnimationsProps)
                 {
                     var connectedAnimation = cas.GetAnimation(props.Key);
                     if (connectedAnimation != null)
@@ -118,7 +118,7 @@ namespace ToolkitPreview
             var parameter = e.Parameter != null && !(e.Parameter is string str && string.IsNullOrEmpty(str)) ? e.Parameter : null;
 
             var cas = ConnectedAnimationService.GetForCurrentView();
-            foreach (var props in _connectedAnnimationsProps)
+            foreach (var props in _connectedAnimationsProps)
             {
                 if (props.IsListAnimation && parameter != null)
                 {
@@ -136,7 +136,7 @@ namespace ToolkitPreview
                 _previousPageConnectedAnimationProps[props.Key] = props;
             }
 
-            _connectedAnnimationsProps.Clear();
+            _connectedAnimationsProps.Clear();
             _coordinatedAnimationElements.Clear();
         }
 
@@ -209,15 +209,24 @@ namespace ToolkitPreview
         {
             SetupFrame();
 
-            if (d is FrameworkElement element)
+            if (e.OldValue is string oldKey)
+            {
+                var item = _connectedAnimationsProps.Where(i => i.Key == oldKey).FirstOrDefault();
+                if (item != null)
+                {
+                    _connectedAnimationsProps.Remove(item);
+                }
+            }
+
+            if (d is FrameworkElement element && e.NewValue is string newKey)
             {
                 var animation = new ConnectedAnimationProperties()
                 {
-                    Key = e.NewValue as string,
+                    Key = newKey,
                     Element = element,
                 };
 
-                _connectedAnnimationsProps.Add(animation);
+                _connectedAnimationsProps.Add(animation);
             }
         }
 
@@ -228,7 +237,13 @@ namespace ToolkitPreview
                 return;
             }
 
-            //TODO handle removal ie newvalue == null
+            if (e.OldValue is UIElement oldElement)
+            {
+                if (_coordinatedAnimationElements.TryGetValue(oldElement, out var oldElementList))
+                {
+                    oldElementList.Remove(element);
+                }
+            }
 
             if (!(e.NewValue is UIElement anchorElement))
             {
@@ -248,28 +263,38 @@ namespace ToolkitPreview
         {
             SetupFrame();
 
-            var props = GetListViewBaseItemAnimationDetails(d);
-            if (props == null)
+            if (e.OldValue is string oldKey)
             {
-                return;
+                var item = _connectedAnimationsProps.Where(i => i.Key == oldKey).FirstOrDefault();
+                if (item != null)
+                {
+                    _connectedAnimationsProps.Remove(item);
+                }
             }
 
-            _connectedAnnimationsProps.Add(props);
+            AddListViewBaseItemAnimationDetails(d);
         }
 
         private static void OnListItemElementNameChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             SetupFrame();
 
-            var props = GetListViewBaseItemAnimationDetails(d);
-            if (props == null)
+            if (e.OldValue is string oldElementName)
             {
-                return;
+                var existingProps = _connectedAnimationsProps.Where(i => i.ElementName != null && i.ElementName == oldElementName).FirstOrDefault();
+                if (existingProps != null && e.NewValue is string newElementName)
+                {
+                    existingProps.ElementName = newElementName;
+                    return;
+                }
+                else if (existingProps != null)
+                {
+                    _connectedAnimationsProps.Remove(existingProps);
+                    return;
+                }
             }
 
-            _connectedAnnimationsProps.Add(props);
-
-            //TODO, need to make sure changed are updated on all attached properties 
+            AddListViewBaseItemAnimationDetails(d);
         }
 
         private static void SetupFrame()
@@ -280,11 +305,11 @@ namespace ToolkitPreview
             }
         }
 
-        private static ConnectedAnimationProperties GetListViewBaseItemAnimationDetails(DependencyObject d)
+        private static void AddListViewBaseItemAnimationDetails(DependencyObject d)
         {
             if (!(d is Windows.UI.Xaml.Controls.ListViewBase listViewBase))
             {
-                return null;
+                return;
             }
             var elementName = GetListItemElementName(d);
             var key = GetListItemKey(d);
@@ -292,16 +317,18 @@ namespace ToolkitPreview
             if (string.IsNullOrWhiteSpace(elementName) ||
                 string.IsNullOrWhiteSpace(key))
             {
-                return null;
+                return;
             }
 
-            return new ConnectedAnimationProperties()
+            var props = new ConnectedAnimationProperties()
             {
                 Key = key,
                 IsListAnimation = true,
                 ElementName = elementName,
                 ListViewBase = listViewBase
             };
+
+            _connectedAnimationsProps.Add(props);
         }
 
         internal class ConnectedAnimationProperties

@@ -588,36 +588,7 @@ namespace ToolkitPreview
             return animation;
         }
 
-        public static Vector3 ConvertToVector3(string str)
-        {
-            string[] values = str.Split(',');
-
-            var count = values.Count();
-            Vector3 vector = Vector3.Zero;
-
-            try
-            {
-                if (count == 1)
-                {
-                    vector = new Vector3(float.Parse(values[0]));
-                }
-                else if (count == 3)
-                {
-                    vector = new Vector3(float.Parse(values[0]),
-                                         float.Parse(values[1]),
-                                         float.Parse(values[2]));
-                }
-                else
-                {
-                    throw new Exception();
-                }
-            } catch (Exception)
-            {
-                throw new FormatException($"Cannot convert {str} to Vector3. Use format \"float, float, float\"");
-            }
-
-            return vector;
-        }
+        
 
         public void PrepareKeyFrames()
         {
@@ -631,7 +602,7 @@ namespace ToolkitPreview
             {
                 FromKeyFrame = new Vector3KeyFrame();
                 FromKeyFrame.Key = 0f;
-                FromKeyFrame.Value = ConvertToVector3(From);
+                FromKeyFrame.Value = From.ToVector3();
                 KeyFrames.Add(FromKeyFrame);
             }
 
@@ -639,7 +610,7 @@ namespace ToolkitPreview
             {
                 ToKeyFrame = new Vector3KeyFrame();
                 ToKeyFrame.Key = 1f;
-                ToKeyFrame.Value = ConvertToVector3(To);
+                ToKeyFrame.Value = To.ToVector3();
                 KeyFrames.Add(ToKeyFrame);
             }
         }
@@ -749,48 +720,11 @@ namespace ToolkitPreview
 
     public class CAnimationCollection : ObservableCollection<CAnimation>
     {
-        public UIElement Element { get; set; }
+        //public UIElement Element { get; set; }
     }
 
     public class KeyFrameCollection : List<KeyFrame>
     {
 
     }
-
-
-    //[Windows.Foundation.Metadata.CreateFromString(MethodName="App6.CVector3.ConvertToCVector3")]
-    //public class CVector3
-    //{
-    //    public Vector3 Value { get; set; }
-
-    //    public static CVector3 ConvertToCVector3(string str)
-    //    {
-    //        string[] values = str.Split(',');
-
-    //        var count = values.Count();
-    //        Vector3 vector = Vector3.Zero;
-
-    //        if (count == 1)
-    //        {
-    //            vector = new Vector3(float.Parse(values[0]));
-    //        }
-    //        else if (count == 3)
-    //        {
-    //            vector = new Vector3(float.Parse(values[0]),
-    //                                 float.Parse(values[1]),
-    //                                 float.Parse(values[2]));
-    //        }
-    //        else
-    //        {
-    //            throw new FormatException($"Cannot convert {str} to Vector3. Use format \"float, float, float\"");
-    //        }
-
-    //        return new CVector3() { Value = vector };
-    //    }
-
-    //    public static implicit operator Vector3(CVector3 obj)
-    //    {
-    //        return obj.Value;
-    //    }
-    //}
 }

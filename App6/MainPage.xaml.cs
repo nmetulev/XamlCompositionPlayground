@@ -29,14 +29,6 @@ namespace App6
         public MainPage()
         {
             this.InitializeComponent();
-            
-        }
-
-        protected override void OnNavigatedTo(NavigationEventArgs e)
-        {
-            base.OnNavigatedTo(e);
-            var visual = ElementCompositionPreview.GetElementVisual(Element2);
-            visual.CenterPoint = new Vector3(50f, 50f, 1);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)

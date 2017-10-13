@@ -6,7 +6,57 @@
     xmlns:toolkit="using:ToolkitPreview"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+    xmlns:core="using:Microsoft.Xaml.Interactions.Core"
     mc:Ignorable="d">
+    <Page.Resources>
+        <Style x:Key="CustomButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{ThemeResource ButtonBackground}"/>
+            <Setter Property="Foreground" Value="{ThemeResource ButtonForeground}"/>
+            <Setter Property="BorderBrush" Value="{ThemeResource ButtonBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="{ThemeResource ButtonBorderThemeThickness}"/>
+            <Setter Property="Padding" Value="8,4,8,4"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FontFamily" Value="{ThemeResource ContentControlThemeFontFamily}"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="FontSize" Value="{ThemeResource ControlContentThemeFontSize}"/>
+            <Setter Property="UseSystemFocusVisuals" Value="True"/>
+            <Setter Property="FocusVisualMargin" Value="-3"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid x:Name="RootGrid" Background="{TemplateBinding Background}" toolkit:VisualProperties.KeepCenterPointCentered="True">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter Target="RootGrid.(toolkit:VisualProperties.Scale)" Value="1"></Setter>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="PointerOver">
+                                        <VisualState.Setters>
+                                            <Setter Target="RootGrid.(toolkit:VisualProperties.Scale)" Value="2"></Setter>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                    </VisualState>
+                                    <VisualState x:Name="Disabled">
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <ContentPresenter x:Name="ContentPresenter" AutomationProperties.AccessibilityView="Raw"
+                                              BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" ContentTemplate="{TemplateBinding ContentTemplate}" Content="{TemplateBinding Content}" ContentTransitions="{TemplateBinding ContentTransitions}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" Padding="{TemplateBinding Padding}" VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
+                            </ContentPresenter>
+                            <toolkit:Implicit.Animations>
+                                <toolkit:ScaleAnimation Duration="0:0:0.4"></toolkit:ScaleAnimation>
+                            </toolkit:Implicit.Animations>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         
@@ -41,7 +91,8 @@
         </Grid>
 
         <Canvas>
-            <Border x:Name="Element2" Height="100" Width="100" Background="Purple" toolkit:Connected.Key="image" >
+            <Border x:Name="Element2" Height="100" Width="100" Background="Purple" toolkit:Connected.Key="image"
+                    toolkit:VisualProperties.CenterPoint="50,50,0">
                 <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="40" Foreground="White">2</TextBlock>
 
                 <toolkit:Implicit.Animations>
@@ -53,6 +104,7 @@
                 </toolkit:Implicit.Animations>
             </Border>
         </Canvas>
-        
+
+        <Button HorizontalAlignment="Right" Style="{StaticResource CustomButtonStyle}">Custom Template (No Action)</Button>
     </Grid>
 </Page>
