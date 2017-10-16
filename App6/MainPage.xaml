@@ -73,9 +73,9 @@
                 <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="40" Foreground="White">1</TextBlock>
 
                 <toolkit:Implicit.ShowAnimations>
-                    <!--<toolkit:CScalarAnimation Target="Offset.Y" Duration="0:0:1" To="0.0"></toolkit:CScalarAnimation>-->
+                    <toolkit:CScalarAnimation Target="Offset.Y" Duration="0:0:1" To="{x:Bind Slider.Value, Mode=OneWay}"></toolkit:CScalarAnimation>
                     <!--<toolkit:CVector3Animation Target="Offset" Duration="0:0:1" To="-50, -50, 0" ></toolkit:CVector3Animation>-->
-                    <toolkit:OffsetAnimation Duration="0:0:1" To="-50, -50, 0" ></toolkit:OffsetAnimation>
+                    <!--<toolkit:OffsetAnimation Duration="0:0:1" To="-50, -50, 0" ></toolkit:OffsetAnimation>-->
                     <toolkit:OpacityAnimation Duration="0:0:1" To="1.0"></toolkit:OpacityAnimation>
                 </toolkit:Implicit.ShowAnimations>
 
@@ -106,5 +106,7 @@
         </Canvas>
 
         <Button HorizontalAlignment="Right" Style="{StaticResource CustomButtonStyle}">Custom Template (No Action)</Button>
+
+        <Slider x:Name="Slider" Minimum="0" Maximum="400" Value="50" Height="50" Width="200" VerticalAlignment="Center" HorizontalAlignment="Center"></Slider>
     </Grid>
 </Page>
